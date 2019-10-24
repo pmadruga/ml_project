@@ -62,6 +62,10 @@ Considering the target of the data is the author, nothing (besides the export) h
 
 ### Primary machine learning modeling aim
 
+<!--
+Some data comes from the iPhone and this doesn't mention it.
+-->
+
 This particular data set revolves around metrics of several different attributes. The principal challenge was to select a main attribute that was both relevant in terms of health impact, while leveraging the heart rate monitoring features that the Apple Watch provides, but also with enough observations so that it can be correlated with the remainder of different attributes monitored.
 
 As mentioned in the introduction, HRV is an indicator of one's health status quo. Specifically, a lower HRV indicates both stress and cardiovascular potential problems, according to existing research. Considering other attributes monitored by the Apple Watch, such as the steps count and/or mindful session, it provides an interesting starting point to answer how is HRV affected by certain attributes. 
@@ -86,15 +90,24 @@ Another issues is the definition of "Apple Exercise Time". As mentioned before, 
 
 ## Data attributes analysis
 
-The data attributes analysis will be split into two main data sets: the first is a standardized data set comprised of the average daily values for Energy Burned, Exercise Time, Stand Hours, HRV, Step Count and Flights Climbed; the second data set is the raw data set of the HRV (measured as SDNN).
+The data attributes analysis will be split into two main data sets: the first is a standardized data set comprised of the average daily values for Active Energy Burned (AEB), Exercise Time (ET), Stand Hours (SH), HRV, Step Count (SC), Flights Climbed (FC) and Meditation Time (MT); the second data set is the raw data set of the HRV (measured as SDNN), although with two added features. Each feature of each of the data sets is explained below.
 
 
 ### Data set I
 
-- Data issues: temporal, interval-based that need to be standardized
+In order to reach to the final state of the data set I, where all the features are gathered, a few data sanitization tasks were necessary. The Activity Summary - the default exported file from the Apple Watch and iPhone - had three features: AEB, ET and SH. The format of these features were already discriminated in a a daily time interval. In other words, all measurements' values were made within an interval of a day. Let's analyse them individually:
+    * AEB. The unit of measure is kcal per day. It's a continuous attribute because it can take any values between the ones being measured. It has a ratio attribute type, considering there is a natural zero.
+    * ET. The unit of measure is in minutes per day. It's continuous and ratio.
+    * SH. The unit of measure is in times per day, where "time" corresponds to an integer determining how many the subject has stood up, within a total time frame of a day. It's discrete and ratio.
 
+Following these attributes, another two sets were sanitized and merged with the above explained data. This is specifically referring to the SC, FC and MT attributes. The SC had its observations made throughout any given period of the day. In other words, whenever any step count happened, it was registered. These values are collected with the iPhone and not the Watch. In order to be merged with the above attributes they had to be "compressed" into the same time span (observations with a day span). In order to achieve this, the values of the raw data set that contained the SC were normalized by doing the sum of values per day.
 
+A similar approach was made with the FC attribute. The raw data was normalized by doing the sum of the values of the observations per day. After these two steps (merging and normalization), the values were then merged with the remainder of the attributes of data set I. Thus, also analyzing these attributes individually:
+    * SC. The unit of measure is the total steps made within a day's interval. It's a discrete and ratio attribute type.
+    * FC. The unit of measure is the total number of flights climbed per day. It's a discrete and ratio attribute type.
+    * MT. The unit of measure is minutes meditated per day. It's continuous and ratio.
 
+There are a few different issues with the data. On an initial observation, it's possible to conclude that, after the data was exported from the iPhone and Apple Watch, it had to be normalized to total values observed per day. Considering that the Activity Summary had a total number of observations (N) of 556 compared to the original N for the SC which was 38408, it's possible to understand the dimension of the reduction that happened when converting SC to units measure per day.
 
 
 
