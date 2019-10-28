@@ -6,6 +6,7 @@ date: "2019-12-13"
 subject: "Machine Learning"
 lang: "en"
 bibliography: bibliography.bib
+numbersections: true
 ...
 
 
@@ -95,6 +96,10 @@ The data attributes analysis will be split into two main data sets: the first is
 
 ### Data set I
 
+<!--
+    TODO: am I using present or past? It's not the same
+-->
+
 In order to reach to the final state of the data set I, where all the features are gathered, a few data sanitization tasks were necessary. The Activity Summary - the default exported file from the Apple Watch and iPhone - had three features: AEB, ET and SH. The format of these features were already discriminated in a a daily time interval. In other words, all measurements' values were made within an interval of a day. Let's analyse them individually:
     * AEB. The unit of measure is kcal per day. It's a continuous attribute because it can take any values between the ones being measured. It has a ratio attribute type, considering there is a natural zero.
     * ET. The unit of measure is in minutes per day. It's continuous and ratio.
@@ -109,6 +114,74 @@ A similar approach was made with the FC attribute. The raw data was normalized b
 
 There are a few different issues with the data. On an initial observation, it's possible to conclude that, after the data was exported from the iPhone and Apple Watch, it had to be normalized to total values observed per day. Considering that the Activity Summary had a total number of observations (N) of 556 compared to the original N for the SC which was 38408, it's possible to understand the dimension of the reduction that happened when converting SC to units measure per day.
 
+Another issue was regarding missing data. Not all of the features had all the observations and the missing data for these features was not occurring within the same time span than other features that also had missing data, thus reducing the total number of observations. None of the missing observations was converted to zero, meaning that the averages and other calculations for the same data set, had different N sizes.
+
+Moreover, a few attributes at to be type-coerced, meaning that some values were strings and had to be converted to integer and floating numbers.
+
+
+
+### Data set II 
+
+The second data set includes an original feature and two features that were created based on the original feature. The original feature is the HRV measurements. This attribute is a continuous ratio, assuming that an HRV of 0 is an absence of measurement. A zero value refers to a really low HRV, thus indicating a level healthiness that is not existent (in terms of the standard deviation of NN intervals, SDNN).
+
+The other two features created were made with the goal of prediction and/or classifying wether being at work or winter time affects the subject's general health. For this goal, the two created attributes were: 
+
+ * Is At Work (IAW). The unit of measure is binary. The value 1 is set if the time of the day is between 9am (including) and 5pm
+(excluding) and 0 if the HRV observation was made during the remaining period of the day and during saturdays and sundays. It's a discrete/binary attribute with a nominal type.
+* Is Winter (IWN). The unit of measure is binary. The value 1 is set if the time of the year is between the 1st of November and 1st of April. It's not a common winter definition but rather reflects the time when the amount of daylight is reduced and temperatures start to drop more significantly. This is within the context of Copenhagen, in Denmark were the observations were made. It's a discrete/binary attribute with a nominal type. 
+
+This data set didn't have significant issues.
+
+## Summary statistics of the attributes
+
+### Data set I
+
+|       |   Step Count |   Flights Climbed |   Meditations (seconds) |   Active Energy Burned (kcal) |   Exercise Time (seconds) |   Stand up number |   Heart Rate Variability (SDNN) |
+|:------|-------------:|------------------:|------------------------:|------------------------------:|--------------------------:|------------------:|--------------------------------:|
+| count |       626    |         600       |                 205     |                       553     |                   553     |         553       |                        387      |
+| mean  |     10753.3  |          11.9117  |                 940.785 |                       288.415 |                   952.948 |           8.53526 |                         41.0839 |
+| std   |      7756.12 |           8.77128 |                 482.322 |                       188.435 |                   935.696 |           4.9085  |                         11.2355 |
+| min   |         8    |           1       |                  60     |                         0     |                     0     |           0       |                         15.0717 |
+| 25%   |      6340.25 |           6       |                 690     |                       189.792 |                   300     |           5       |                         33.6575 |
+| 50%   |      9219    |          10       |                 718     |                       305.587 |                   780     |          10       |                         40.2702 |
+| 75%   |     13273.5  |          15       |                1291     |                       397.281 |                  1320     |          12       |                         47.0749 |
+| max   |     66675    |          73       |                3675     |                      1297.69  |                  8160     |          19       |                        104.893  |
+
+
+Table:  Summary for daily statistics (data set I)
+
+
+### Data set II
+
+|       |   HRV (SDNN) |   Is at Work (binary) |   Is Winter time (binary) |
+|:------|-------------:|----------------------:|--------------------------:|
+| count |    932       |            932        |                932        |
+| mean  |     41.2493  |              0.43133  |                  0.363734 |
+| std   |     15.6852  |              0.495528 |                  0.481332 |
+| min   |      8.21203 |              0        |                  0        |
+| 25%   |     30.8391  |              0        |                  0        |
+| 50%   |     38.8085  |              0        |                  0        |
+| 75%   |     49.5485  |              1        |                  1        |
+| max   |    173.526   |              1        |                  1        |
+
+
+
+Table:  Summary statistics for Heart Rate Variability (data set II)
+
+
+
+
+\pagebreak
+
+## Data visualization
+
+
+## Conclusion of Part I
+
+- Potentially low number of observations
+- A lot of NaN's that affects attributes (meaning that removing one row of a feature that has a NaN, will remove row for features that actually have numbers)
+- Many features with different scales that needed to be standardized 
+- 
 
 
 
