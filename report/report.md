@@ -131,6 +131,8 @@ The remaining features created were made with the goal of determining what is in
 * Is Above Mean Value (IAMV). The unit of measure is binary. The value 1 is set if the HRV value is above the calculated mean (which is 41.249) and a value of 0 if it's below the mean of HRV. It's a discrete/binary attribute with a nominal type. 
 * Hour of Day (HOD). The unit of measure is the hour of the day (between 0 and 23). It's a discrete attribute with an interval attribute type. 
 
+<!-- TODO: Missing new features (check jupyter notebook for dataset II) -->
+
 
 
 ## Summary statistics of the attributes
@@ -259,6 +261,7 @@ Data set II is significantly different that I, due to it's inferior amount of at
 
 ### Detection of outliers
 
+<!-- TODO: REMOVE OUTLIER BECAUSE IT WILL BE A BEAUTIFUL NORMAL DISTRIBUTION -->
 There's a potential outlier when looking at the values of HRV over time.
 ![HRV values over time](./images/dataset_3.png){ width=100% height=100% }
 
@@ -273,6 +276,64 @@ There's a potential outlier when looking at the values of HRV over time.
 - PCA analysis for DSI has a lot of information loss due to the fact that it's only possible to reduce two dimensions out of 7 total
 - It's a time series so a non-<> type of data
 - Dataset II will be used - because it has more observations and better correlation (does it?)
+
+
+
+
+\pagebreak
+
+# Part II - Supervised Learning
+
+## Regression - part A
+
+### 1.
+
+- Which variable is going to be predicted?
+ HRV
+- Based on?
+It's a time series, so date. "Above Mean Average" is the selected feature since it correlates well.
+- Why?
+To determine how HRV progress over time (and wether above average or being morning/afternoon influences higher values for HRV)
+- Feature transformations
+One-hot-encoding was not used because the features were non-categorical
+All features were standardized (using StandardScaler) (show df_hrv_scaled.head())
+Converted to polinomial regression after noticing that the RMSE values were lower (2 degrees) when doing a learning regression for polinomial and linear   
+
+### 2.
+
+- Split test and train (0.20) (hold-one-out)
+- Did a normal linear regression (show RMSE value)
+- Explain the alphas interval (show the code)
+- Ridge was used
+    - Explain why (because of the weights)
+    - Show chart "ridge coefficients"
+    - Optimal alpha value (one with not a lot of bias and not a lot of variance) was close to XX (XX = alpha from RidgeCV)
+    - Determined RidgeCV (alphas = alphas, cv=10)
+    - Show actual versus predicted
+- "So, if the alpha value is 0, it means that it is just an Ordinary Least Squares Regression model. The L2 norm term in ridge regression is weighted by the regularization parameter alpha. So, if the alpha value is 0, it means that it is just an Ordinary Least Squares Regression model. So, the larger is the alpha, the higher is the smoothness constraint. So, the smaller the value of alpha, the higher would be the magnitude of the coefficients."
+
+### 3.
+
+- RidgeCV was used but the data set was split before into train and test set. So the ridgeCV, which had a K=10, was fitted to train_set. The predictions from the model were made using the original test_set , isolated from the ones created within RidgeCV, using a hold-one-out method.
+- The coefficient of the model was 0.76. This means that for every unit of the Is Above Mean, there are 0.76 units of HRV increasing. Because there is only one feature - due to the low correlation of the other ones -, it's no possible to compare with other coefficients (presumably, they would have low coefficient, thus a low effect on the HRV value). This is for the scaled dataset.
+- It does make sense, because it shows that HRV increases with above mean values. In practical terms, if an above mean value represents a "healthy" day, then a higher value has an effect on a higher value of HRV
+
+
+### Conclusions part A
+
+- This dataset is limited for a linear regression.
+- Because the feature with highest correlation is binary
+- Other features are not highly correlated
+- A better to have continuous values and analyze would be to use the time series for forecast. To do that, the timestamp should be transformed in order to have a lag.
+- Non-regularized has better scores than regularized
+
+\pagebreak
+
+## Classification
+
+### Baseline model (log regression)
+
+- Introduced
 
 
 
