@@ -47,7 +47,7 @@ The data sets are:
 > "_[...]green LED lights paired with light‑sensitive photodiodes to detect the amount of blood flowing._"
 
 - Mindful Session: time span (in intervals of seconds) where a meditation session was tracked.
-- Heart Rate Variability (HRV): the Apple Watch computes the standard deviation of all normal sinus RR intervals over 24h (or SDNN). An RR interval is a beat-to-beat difference. When HRV is mentioned in this report, it refers to the SDNN values.
+- Heart Rate Variability (hereafter referred to as HRV): the Apple Watch computes the standard deviation of all normal sinus RR intervals over 24h (or SDNN). An RR interval is a beat-to-beat difference. When HRV is mentioned in this report, it refers to the SDNN values.
 - Activity Summary: daily summary of some of the above mentioned features.
 
 
@@ -77,11 +77,11 @@ Moreover, the data set with the HRV can be broken down into new interesting attr
 
 - Regression: so that it's possible to determine what's the estimated HRV value for the next day, based on the data from the previous days. The observations are made in periods more granular than a full day, but for this regression the average values of HRV will be used. There are two main reasons for this "grouping": the intervals where the observations happen are not regular and don't have the same time span. For example, there could be several measurements in the morning in one day during a period of 5minutes and in another day the period could be shorter with just a few measurements made.
 
-- Clustering: based on HRV measurements, determine if there was more or less physical activity (namely, whether the steps count and/or the flights climbed).
+- Clustering: based on HRV measurements, determine if there was more or less physical activity (namely, whether the steps count and/or the flights climbed). Another possibility is to determine any clusters regarding the time (wether being day of the week and/or hour of the day) where these measurements occurred.
 
-- Association mining: give certain features (such as step count and/or number of meditation sessions) which are more likely to influence HRV values.
+- Association mining: give certain features (such as step count and/or number of meditation sessions) which are more likely to influence HRV values. Another possibility is to determine whether an HRV observation (in regards to date and time) has any probability of being measured on another date and time. An example is if there is any relation between a measurement of an HRV value in the morning with the day of the week.
 
-Despite being a rich data set (i.e. a reasonable number of observations made over a period of 2 years, with many attributes spread over different data sets), it entails some limitations and issues. For one, there is not a single data set but rather a few, thus it's a non-simple data set due to its temporal structure. Specifically, there is one data set for the Activity Summary, one for Step Count, one for HRV, one for mindful sessions and one for flights climbed. All these data sets have different time spans and measure times thus these have had to be standardized so they can be compared - i.e., they have different intervals. These data sets were standardized through the average values per day. Nonetheless, the HRV data set could be used as a standalone non-standardized data set and some features could be created out of it.
+Despite being a rich data set (i.e. a reasonable number of observations made over a period of 2 years, with many attributes spread over different data sets), it entails some limitations and issues. For one, there is not a single data set but rather a few different ones. It's a non-simple data set due to being a time series one. Specifically, there is one data set for the Activity Summary, one for Step Count, one for HRV, one for mindful sessions and one for flights climbed. All these data sets have different time spans and measure times thus these have had to be standardized so they can be compared - i.e., they have different intervals. These data sets were standardized through the average values per day. Nonetheless, the HRV data set could be used as a standalone non-standardized data set and some features could be created out of it.
 
 There is also the issue regarding time span of observations, meaning that some observations were made several times during the day whereas others were not. Apple provides a summary of some of the attributes presenting observation values within a period of a day, but it's not for all attributes - namely "Active Energy Burned", "Apple Exercise Time" and "Apple Stand Hours" thus excluding HRV, flights climbed and step count.
 
@@ -91,7 +91,13 @@ Another issues is the definition of "Apple Exercise Time". As mentioned before, 
 
 ## Data attributes analysis
 
-The data attributes analysis will be split into two main data sets: the first is a standardized data set comprised of the average daily values for Active Energy Burned (AEB), Exercise Time (ET), Stand Hours (SH), HRV, Step Count (SC), Flights Climbed (FC) and Meditation Time (MT); the second data set is the raw data set of the HRV (measured as SDNN), although with two added features. Each feature of each of the data sets is explained below.
+The data attributes analysis will be split into two main data sets: the first is a standardized data set comprised of the average daily values for Active Energy Burned (AEB), Exercise Time (ET), Stand Up (SU), HRV, Step Count (SC), Flights Climbed (FC) and Meditation Time (MT); the second data set is the raw data set of the HRV, although with two added features. Each feature of each of the data sets is explained below.
+
+There's one attribute that is transversal to both data sets: the HRV. This attribute is a continuous ratio, assuming that an HRV of 0 is an absence of measurement. A zero value refers to a really low HRV, thus indicating a level healthiness that is non-existent (in terms of the standard deviation of NN intervals, SDNN). It's measure in milliseconds (ms).
+
+The index of both data sets is a timestamp, commonly referred to as _creationDate_ (or just _timestamp_ in other cases). In the first data set, this refers to the measurements on all of the features. Because some features were not measured at the same time, some of the values had to be dropped. This is will be scrutinized later on in this work. In the second data set this refers to when the measurements of HRV where made.
+
+The following subchapters analyze each attribute of each data set.
 
 
 ### Data set I
@@ -101,16 +107,22 @@ The data attributes analysis will be split into two main data sets: the first is
 -->
 
 In order to reach to the final state of the data set I, where all the features are gathered, a few data sanitization tasks were necessary. The Activity Summary - the default exported file from the Apple Watch and iPhone - had three features: AEB, ET and SH. The format of these features were already discriminated in a a daily time interval. In other words, all measurements' values were made within an interval of a day. Let's analyse them individually:
-    * AEB. The unit of measure is kcal per day. It's a continuous attribute because it can take any values between the ones being measured. It has a ratio attribute type, considering there is a natural zero.
-    * ET. The unit of measure is in minutes per day. It's continuous and ratio.
-    * SH. The unit of measure is in times per day, where "time" corresponds to an integer determining how many the subject has stood up, within a total time frame of a day. It's discrete and ratio.
+
+- AEB. The unit of measure is kcal per day. It's a continuous attribute because it can take any values between the ones being measured. It has a ratio attribute type, considering there is a natural zero.
+
+- ET. The unit of measure is in minutes per day. It's continuous and ratio.
+
+- SU. The unit of measure is in times per day, where "time" corresponds to an integer determining how many the subject has stood up, within a total time frame of a day. It's discrete and ratio.
 
 Following these attributes, another two sets were sanitized and merged with the above explained data. This is specifically referring to the SC, FC and MT attributes. The SC had its observations made throughout any given period of the day. In other words, whenever any step count happened, it was registered. These values are collected with the iPhone and not the Watch. In order to be merged with the above attributes they had to be "compressed" into the same time span (observations with a day span). In order to achieve this, the values of the raw data set that contained the SC were normalized by doing the sum of values per day.
 
 A similar approach was made with the FC attribute. The raw data was normalized by doing the sum of the values of the observations per day. After these two steps (merging and normalization), the values were then merged with the remainder of the attributes of data set I. Thus, also analyzing these attributes individually:
-    * SC. The unit of measure is the total steps made within a day's interval. It's a discrete and ratio attribute type.
-    * FC. The unit of measure is the total number of flights climbed per day. It's a discrete and ratio attribute type.
-    * MT. The unit of measure is minutes meditated per day. It's continuous and ratio.
+
+- SC. The unit of measure is the total steps made within a day's interval. It's a discrete and ratio attribute type.
+
+- FC. The unit of measure is the total number of flights climbed per day. It's a discrete and ratio attribute type.
+
+- MT. The unit of measure is seconds meditated per day. It's continuous and ratio.
 
 There are a few different issues with the data. On an initial observation, it's possible to conclude that, after the data was exported from the iPhone and Apple Watch, it had to be normalized to total values observed per day. Considering that the Activity Summary had a total number of observations (N) of 556 compared to the original N for the SC which was 38408, it's possible to understand the dimension of the reduction that happened when converting SC to units measure per day.
 
@@ -118,18 +130,26 @@ Another issue was regarding missing data. Not all of the features had all the ob
 
 Moreover, a few attributes at to be type-coerced, meaning that some values were strings and had to be converted to integer and floating numbers.
 
-
-
 ### Data set II 
 
-The second data set includes an original feature and other features that were created based on the original feature. The original feature is the HRV measurements. This attribute is a continuous ratio, assuming that an HRV of 0 is an absence of measurement. A zero value refers to a really low HRV, thus indicating a level healthiness that is not existent (in terms of the standard deviation of NN intervals, SDNN).
+The second data set includes an original feature (i.e., a feature that come from the original iPhone/Watch data sets) and other features that were created based on the original feature. The original feature is the HRV measurements.
+
+Because the frequency of the measurements was irregular, a resampling of the data was necessary. Thus, an upsampling of the timestamps (specifically, the hours) was made, using mean values for the interpolation, using the following methods from the _DataFrame_ handled by _pandas_:
+
+```
+.resample('H').mean().interpolate()
+```
 
 The remaining features created were made with the goal of determining what is influenced by or influences HRV values. For this goal, the created attributes were: 
 
- * Is At Work (IAW). The unit of measure is binary. The value 1 is set if the time of the day is between 9am (including) and 5pm
+ - Is At Work (IAW). The unit of measure is binary. The value 1 is set if the time of the day is between 9am (including) and 5pm
 (excluding) and 0 if the HRV observation was made during the remaining period of the day and during saturdays and sundays. It's a discrete/binary attribute with a nominal type.
-* Is Above Mean Value (IAMV). The unit of measure is binary. The value 1 is set if the HRV value is above the calculated mean (which is 41.249) and a value of 0 if it's below the mean of HRV. It's a discrete/binary attribute with a nominal type. 
-* Hour of Day (HOD). The unit of measure is the hour of the day (between 0 and 23). It's a discrete attribute with an interval attribute type. 
+- Is Above Mean Value (IAMV). The unit of measure is binary. The value 1 is set if the HRV value is above the calculated mean (which is 41.249) and a value of 0 if it's below the mean of HRV. It's a discrete/binary attribute with a nominal type. 
+- Hour of Day (HOD). The unit of measure is the hour of the day (between 0 and 23). It's a discrete attribute with an interval attribute type. 
+- Day of Week (DOW). The unit of measure is the day of week (between 1 and 7, where 1 represents a monday and 7 represents a sunday). It's a discrete attribute with an interval attribute type.
+- Is Morning (IM). The unit of measure is binary. The value 1 is set if the date of the measurement is between 6am (included) and 12am (excluded). It's a discrete/binary attribute with a nominal type. 
+- t+1. This is a lagged feature based on the HRV value. It refers to the values of the next hour. These feature was created in order to make regression possible. The unit of measure and the attribute types is the same as the HRV original values. It was made possible using the _shift_ attribute from _pandas_ library: `.shift(periods=1)`
+
 
 <!-- TODO: Missing new features (check jupyter notebook for dataset II) -->
 
@@ -139,18 +159,31 @@ The remaining features created were made with the goal of determining what is in
 
 ### Data set I
 
-<!-- TODO: Show head  -->
+Here's a preview of the values of data set I:
 
-|       |   Step Count |   Flights Climbed |   Meditations (seconds) |   Active Energy Burned (kcal) |   Exercise Time (seconds) |   Stand up number |   Heart Rate Variability (SDNN) |
-|:------|-------------:|------------------:|------------------------:|------------------------------:|--------------------------:|------------------:|--------------------------------:|
-| count |       626    |         600       |                 205     |                       553     |                   553     |         553       |                        387      |
-| mean  |     10753.3  |          11.9117  |                 940.785 |                       288.415 |                   952.948 |           8.53526 |                         41.0839 |
-| std   |      7756.12 |           8.77128 |                 482.322 |                       188.435 |                   935.696 |           4.9085  |                         11.2355 |
-| min   |         8    |           1       |                  60     |                         0     |                     0     |           0       |                         15.0717 |
-| 25%   |      6340.25 |           6       |                 690     |                       189.792 |                   300     |           5       |                         33.6575 |
-| 50%   |      9219    |          10       |                 718     |                       305.587 |                   780     |          10       |                         40.2702 |
-| 75%   |     13273.5  |          15       |                1291     |                       397.281 |                  1320     |          12       |                         47.0749 |
-| max   |     66675    |          73       |                3675     |                      1297.69  |                  8160     |          19       |                        104.893  |
+| Date       |   SC (count) |   FC (count) |   MT (seconds) |   AEB (kcal) |   ET (seconds) |   SU (count) |   HRV (ms) |
+|:-----------|-------------:|-------------:|---------------:|-------------:|---------------:|-------------:|-----------:|
+| 2018-01-16 |        10752 |            9 |            689 |      356.837 |           1200 |           13 |    36.5773 |
+| 2018-01-20 |        14288 |            9 |           1382 |      337.801 |           1320 |           13 |    37.7527 |
+| 2018-01-22 |         9850 |           11 |           1792 |      259.989 |            600 |           10 |    28.6433 |
+| 2018-01-23 |         6884 |            4 |            705 |      337.471 |            720 |           16 |    27.9964 |
+| 2018-01-27 |        34061 |           13 |           1398 |      666.704 |           5700 |            8 |    36.5746 |
+
+
+Table:  First five observations (data set I)
+
+
+
+|       |   SC (count) |   FC (count) |   MT (seconds) |   AEB (kcal) |   ET (seconds) |   SU (count) |   HRV (ms) |
+|:------|-------------:|-------------:|---------------:|-------------:|---------------:|-------------:|-----------:|
+| count |       111    |     111      |        111     |      111     |        111     |    111       |   111      |
+| mean  |     11679.5  |      13.8829 |       1009.07  |      368.491 |       1093.51  |     11.1171  |    42.8225 |
+| std   |      7862.59 |      10.3667 |        532.345 |      157.171 |        919.771 |      3.78931 |    12.3163 |
+| min   |       266    |       2      |         60     |        2.684 |          0     |      1       |    21.9545 |
+| 25%   |      6682.5  |       6.5    |        690     |      274.454 |        450     |      9       |    35.0982 |
+| 50%   |      9850    |      12      |        811     |      356.837 |        900     |     12       |    41.7738 |
+| 75%   |     14222    |      17.5    |       1351.5   |      451.418 |       1440     |     14       |    49.2031 |
+| max   |     43598    |      73      |       3675     |      863.354 |       5700     |     19       |   104.893  |
 
 
 Table:  Summary for daily statistics (data set I)
@@ -158,22 +191,31 @@ Table:  Summary for daily statistics (data set I)
 
 ### Data set II
 
-<!-- TODO: Show .head() -->
+|    | timestamp           |     HRV |   IAW |   HOD |   DOW |   IM |      t+1 |
+|---:|:--------------------|--------:|------:|------:|------:|-----:|---------:|
+|  0 | 2018-01-16 09:00:00 | 38.7547 |     1 |     9 |     2 |    1 | nan      |
+|  1 | 2018-01-16 10:00:00 | 36.4794 |     1 |    10 |     2 |    1 |  38.7547 |
+|  2 | 2018-01-16 11:00:00 | 34.2041 |     1 |    11 |     2 |    1 |  36.4794 |
+|  3 | 2018-01-16 12:00:00 | 31.9287 |     1 |    12 |     2 |    0 |  34.2041 |
+|  4 | 2018-01-16 13:00:00 | 29.6534 |     1 |    13 |     2 |    0 |  31.9287 |
 
-|       |   HRV (SDNN) |   Is at Work (binary) |   Is Above Mean Value |   Hour of Day |
-|:------|-------------:|----------------------:|----------------------:|--------------:|
-| count |    932       |            932        |            932        |     932       |
-| mean  |     41.2493  |              0.43133  |              0.433476 |      14       |
-| std   |     15.6852  |              0.495528 |              0.495821 |       5.30893 |
-| min   |      8.21203 |              0        |              0        |       0       |
-| 25%   |     30.8391  |              0        |              0        |      10       |
-| 50%   |     38.8085  |              0        |              0        |      14       |
-| 75%   |     49.5485  |              1        |              1        |      18       |
-| max   |    173.526   |              1        |              1        |      23       |
+Table: First five observations (data set II)
 
 
 
-Table:  Summary statistics for Heart Rate Variability (data set II)
+|       |         HRV |          IAW |         HOD |         DOW |           IM |         t+1 |
+|:------|------------:|-------------:|------------:|------------:|-------------:|------------:|
+| count | 15069       | 15069        | 15069       | 15069       | 15069        | 15068       |
+| mean  |    41.2037  |     0.23837  |    11.4992  |     4.00239 |     0.250116 |    41.2063  |
+| std   |    11.9823  |     0.426101 |     6.92304 |     1.99658 |     0.433094 |    12.0014  |
+| min   |     8.21203 |     0        |     0       |     1       |     0        |     8.21203 |
+| 25%   |    33.5111  |     0        |     5       |     2       |     0        |    33.5131  |
+| 50%   |    39.6968  |     0        |    11       |     4       |     0        |    39.6977  |
+| 75%   |    47.6074  |     0        |    18       |     6       |     1        |    47.6076  |
+| max   |   144.31    |     1        |    23       |     7       |     1        |   173.526   |
+
+
+Table:  Summary statistics for Heart Rate Variability (data set II) with lagging (t+1)
 
 \pagebreak
 
@@ -183,18 +225,18 @@ Table:  Summary statistics for Heart Rate Variability (data set II)
 
 ### Detection of outliers
 
-The detection of outliers is, for now, made through a visual analysis of the occurences of all of the attributes. In order to visualize them in just one chart, the data was standardized (using _StandardScaler_ from _Scikit-Learn_). 
+The detection of outliers is, for now, made through a visual analysis of the occurrences of all of the attributes. In order to visualize them in just one chart, the data was standardized (using _StandardScaler_ from _Scikit-Learn_). 
 ![Standardized Values](./images/dataset_1_scatterplot.png ){ width=100% height=100% }
 
-These standardized values are also excluding any non-existent values, meaning that if any of the attributes had a non-existent value, then all the attributes of that observation were also removed. This significantely reduced the number of observations to 110.
+These standardized values are also excluding any non-existent values, meaning that if any of the attributes had a non-existent value, then all the attributes of that observation were also removed. This significantely reduced the number of observations to 111.
 
-It's possible to see a few potential outlier candidates with values above 4. Nonetheless, the difference between these values seem to not be too significant enough to determine them as outliers. Using visual inference to determine outliers is probably insufficient and incorrect.
+It's possible to see a few potential outlier candidates with standardized values above 4. Nonetheless, the difference between these values seem to not be too significant enough to determine them as outliers. Using visual inference to determine outliers seems to be insufficient.
 
 ### Distribution
 
-The non-standardized histogram of the attributes is represented as: ![Histogram of the attributes](./images/dataset_1_hist.png ){ width=100% height=100% }
+The non-standardized histogram of the attributes is represented as: ![Histogram of the attributes](./images/ds1_hist.png ){ width=100% height=100% }
 
-The attributes don't seem to be symmetrically distributed, except for HRV which follows a bell-shaped curve (although not a perfect one). An outlier can be the explanation for the asymmetrical shape of the HRV curve.
+The attributes don't seem to be symmetrically distributed, except for HRV which follows a bell-shaped curve (although not a perfect one). An outlier can be the explanation for the asymmetrical shape of the HRV curve. Stand Up (SU) and Step Count (SC) also seem to have outliers and an initial assumption can be that removing those outliers would turn its histograms into normally distributed curves.
 
 \pagebreak
 
@@ -202,23 +244,39 @@ The attributes don't seem to be symmetrically distributed, except for HRV which 
 
 The correlation of the different attributes is represented as: 
 
-![Correlation of the attributes](./images/dataset_1_correlation.png ){ width=100% }
+![Correlation of the attributes](./images/ds1_corr.png ){ width=100% }
 
-It's possible to see that there are two significant correlations. One between Active Energy Burned and Exercise Time (0.62), which intuitively makes sense. And another correlation between Stand up Number and Active Energy Number (0.72). However, there seems to be a lack of correlation between any of the attributes and the HRV, thus challenging the initial premise of this project - wether the HRV is affected by other attributes.
+It's possible to see that there are two significant correlations. One between Active Energy Burned and Exercise Time (0.62), which intuitively makes sense. And another correlation between Stand up Number and Active Energy Number (0.7). However, there seems to be a lack of correlation between any of the attributes and the HRV, thus challenging the initial premise of this project - wether the HRV is affected by other attributes.
 
-Even though research has proven that there is a correlation between HRV and exercise time or meditation time, in this case there seems to be no correlation. A possible explanation is due to the low amount of observations (both for the standardized and non-standardized data).
+Even though research has proven that there is a correlation between HRV and exercise time or meditation time, in this case there seems to be no correlation. A possible explanation is due to the low amount of observations (both for the standardized and non-standardized data, N=111).
 
 \pagebreak
 
-### Principal Components Analysis
+### Principal Components Analysis (PCA)
+
+Being PCA a form of dimensionality reduction, it only makes sense to apply it on data sets with a relevant number of features (in this case 7 features), so that it's possible to analyze and reduce the existing dimensions. For this reason, data set I was selected for this analysis.
 
 #### Explained variance
 
-In order to obtain the explained variance, a PCA was performed on the entire data set I. The result is shown as the following: ![Explained variance](./images/dataset_1_pca_explained_variance.png ){ width=100% }
 
-It's important to set an assumption before analyzing the results: in order to not loose much information from the original data set, an accumulated explained variance of above 90% is needed. Now analyzing the results, it's possible to verify that to keep an accumulated explained variance above the 90%, there's not much room for dimensionality reduction, since there will be the need to project the data onto 5 Principal Components. This makes the visualization of the data projected impossible, considering it's a 5-dimensional one.
+In order to obtain the explained variance, a PCA was performed on the entire data set I. The data set was previously scaled and the _PCA_ method from the _decomposition_ method belonging to _scikit-learn_ was then used.
 
-In order to visualize it, a significant amount of information will be lost. Specifically, in order to have PC0, PC1 and PC2 visualized (which account for 71% of the cumulative explained variance), 29% of the information of the data would be lost. Moreover, in order to project the data set I onto just PC0 and PC1, 44% of the information will be lost. 
+```
+from sklearn.decomposition import PCA
+
+pca = PCA(n_components=7)
+principal_components = pca.fit_transform(df_standardized)
+```
+
+It was now possible to obtain the _explained variance ratio_ from each of the components. The following figure represents the _cumulative explained variance_:
+
+ ![Explained variance](./images/dataset_1_pca_explained_variance.png ){ width=100% }
+
+It's important to set an assumption before analyzing the results: in order to not loose much information from the original data set, an accumulated explained variance of above 90% is needed. 
+
+Now analyzing the results, it's possible to verify that to keep an accumulated explained variance above the 90%, there's not much room for dimensionality reduction, since there will be the need to project the data onto (at least) 5 Principal Components. This makes the visualization of the data projected impossible, considering it's a 5-dimensional one.
+
+However, in order to visualize it, a significant amount of information will be lost. Specifically, in order to have PC0, PC1 and PC2 visualized (which account for 71% of the cumulative explained variance), 29% of the information of the data would be lost. Moreover, in order to project the data set I onto just PC0 and PC1, 44% of the information will be lost. 
 
 Thus there is not much room for dimensionality reduction. Nevertheless, it's possible to project the data until PC4 meaning that two dimensions can be reduced from the original data set.
 
@@ -245,11 +303,12 @@ For PC1, relatively high values of Step Count, Flights Climbed, Meditation and E
 
 #### Projected data onto the Principal Components
 
-Considering the target is the HRV feature, the following figure demonstrates the projection of the target onto PC0 and PC1:
 
-![Explained variance](./images/dataset_1_data_projection.png ){ width=100% }
+Considering the target is the HRV feature, figure \ref{data_projection_fig} demonstrates the projection of the target onto PC0 and PC1.
 
-It's possible to verify that, in a two-dimensional representation, that a significant amount of information for the original target has been lost, since there are higher values than the ones represented that have been omitted. 
+![Explained variance\label{data_projection_fig}](./images/dataset_1_data_projection.png ){ width=100% }
+
+It's possible to verify that, in a two-dimensional representation, a significant amount of information for the original target has been lost, since there are higher values than the ones represented that have been omitted. 
 
 \pagebreak
 
@@ -257,17 +316,64 @@ It's possible to verify that, in a two-dimensional representation, that a signif
 
 <!-- TODO: Specifiy nr of attributes and observations -->
 
-Data set II is significantly different that I, due to it's inferior amount of attributes and it's number of observations.
+Data set II is significantly different that I, due to it's inferior amount of attributes and it's number of observations. For this reason, a PCA analysis wasn't performed. Moreover, the purpose of understanding Principal Components Analysis was achieved with data set I. 
+
+Nonetheless, a detection of outliers was made.
 
 ### Detection of outliers
+
+The detection of outliers was made on a interpolated (i.e., lagged version of data set II).
 
 <!-- TODO: REMOVE OUTLIER BECAUSE IT WILL BE A BEAUTIFUL NORMAL DISTRIBUTION -->
 There's a potential outlier when looking at the values of HRV over time.
 ![HRV values over time](./images/dataset_3.png){ width=100% height=100% }
 
+### Distribution
+
+Figure \ref{ds2_hist} shows the histogram of the attributes. It seems that _HRV_ and _t+1_ follow a normal distribution. 
+
+![Histogram of the attributes \label{ds2_hist}](../report/images/ds2_hist.png){ width=100% height=100% }
+
+
+### Variable correlation
+
+The heatmap on figure \ref{ds2_corr} shows the linear correlation between attributes of data set II. It's possible to see that the _t+1_ variable have a very high positive correlation (0,97). This seems to be a good indicator to use this data set for the upcoming regression exercises. 
+
+![Correlation of the attributes \label{ds2_corr}}](./images/ds2_corr.png ){ width=100% }
+
 \pagebreak
 
 ## Conclusion of Part I
+
+The conclusion for Part I of this report can be subdivided into different categories. 
+
+### Difference in data sets
+
+In order to perform the needed tasks on this report, there had to be some data manipulation on the original dataset. This data manipulation was made so that _HRV_ was still a central piece of the report while still being able to fulfill the tasks at hand, wether being dimensionality reduction or just analyzing the distributions of its features.
+
+There was a decision to split the data set into two parts (named as data set I and II). Due to it's number of features, data set I was used to perform dimensionality reduction. However, due to its reduced number of observations made it somewhat limited to perform any  Supervised (or Unsupervised) Learning tasks, as it would risk overfitting, something that will be possible to observe in the upcoming chapters.
+
+Thus, in order to have a data set with a larger number of observations, a new data set II was created (out of the original one that contains the HRV measurements alone). It had a larger number of observations (N=932) but its observations were not equidistant in time. Thus, it was need to have data interpolation. This had a positive effect on the increase of the number of observations. However, it still had a relatively low number of features.
+
+In the end, for both data sets, there were operations to determine correlations and outlier detection. Its conclusions are analyzed hereafter.
+
+### PCA
+
+A PC Analysis was made on data set I. It's possible to conclude that, in order to keep 90% of the information, it was not possible to have a higher number of dimensionality reduction. Particularly, it was possible to reduce from 7 to 5 dimensions. Therefore, in order to represent data projected onto the hyperplane that lies closest to the data (in this case 90%), it was not possible to represent it into a chart. On the other hand, to make it possible to represent the projected data onto a two-dimensional chart, a lot of the variance was lost, meaning that a lot of the information was lost.
+
+### Correlation
+
+On both data sets, there wasn't much linear correlation between features. Except for the _t+1_ feature which was highly correlated with HRV. There were other significant correlations between attributes but it's importance was ignore due to not being related to HRV. In a different context, these should have not been ignore but the reason was so that HRV kept being a central part of the report, by applying Machine Learning techniques related to it. 
+
+Moreover, the correlation coefficient use only measures linear correlations as opposed to non-linear correlation. For example, it does not measure the case where "if _x_ is close to 0, then _y_ increases" (@aurelien). There are also other types of similarity measures (i.e, measuring the euclidean distance) that could have been taken and a further analysis on this topic should include those.
+
+Another improvement to explore further correlations could be the interaction of variables, hence creating new variables. For example, what would be the effects when dividing the value of _HRV_ with _HOD_. 
+
+### Final remarks
+
+With the above in mind, it's possible to verify that there are some limitations for this time-series data set. Nonetheless, with the changes made to the original data and the new features created, it paves the way for the upcoming supervised learning tasks, specially when it comes to regression. These changes made it possible to continue on the track to evaluate the effects of Machine Learning techniques for a Heart Rate Variability-centric report.
+
+### Outliers
 
 - Potentially low number of observations
 - A lot of NaN's that affects attributes (meaning that removing one row of a feature that has a NaN, will remove row for features that actually have numbers)
@@ -333,10 +439,30 @@ Converted to polinomial regression after noticing that the RMSE values were lowe
 
 ### Baseline model (log regression)
 
-- Introduced
+- Resampled data with interpolation
+- 
 
 
 
 \pagebreak
+
+# Unsupervised learning
+
+## Hierarquical clustering
+
+- Agglomerative hierarquical clustering 
+- affinity -> euclidean. explain why.
+- linkage -> ward. explain why.
+- Created dendogram to find ideal number of clusters. Explain how nr of clusters was found and show dendogram picture.
+
+## Gaussian Mixture Model
+
+## Anomaly/outlier detection
+
+- (Inspiration from https://machinelearningmastery.com/probability-density-estimation/)
+- pag 236 do handson
+- Nao ha anomalies ou outliers
+
+- 
 
 # References
