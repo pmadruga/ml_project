@@ -7,7 +7,9 @@ subject: "Machine Learning"
 lang: "en"
 bibliography: bibliography.bib
 numbersections: true
-...
+header-includes:
+   - \usepackage{cleveref}
+---
 
 
 
@@ -373,18 +375,6 @@ Another improvement to explore further correlations could be the interaction of 
 
 With the above in mind, it's possible to verify that there are some limitations for this time-series data set. Nonetheless, with the changes made to the original data and the new features created, it paves the way for the upcoming supervised learning tasks, specially when it comes to regression. These changes made it possible to continue on the track to evaluate the effects of Machine Learning techniques for a Heart Rate Variability-centric report.
 
-### Outliers
-
-- Potentially low number of observations
-- A lot of NaN's that affects attributes (meaning that removing one row of a feature that has a NaN, will remove row for features that actually have numbers)
-- Many features with different scales that needed to be standardized 
-- Lack of correlation between HRV and others
-- PCA analysis for DSI has a lot of information loss due to the fact that it's only possible to reduce two dimensions out of 7 total
-- It's a time series so a non-<> type of data
-- Dataset II will be used - because it has more observations and better correlation (does it?)
-
-
-
 
 \pagebreak
 
@@ -392,7 +382,196 @@ With the above in mind, it's possible to verify that there are some limitations 
 
 ## Regression - part A
 
-### 1.
+### Predicted variable and feature transformations
+
+As it was previously explained, this part of the report will refer to data set II. As a reminder, data set II is a time series of the values of Heart Rate Variability (HRV). This makes it a good candidate for building models that can be used for forecasting. In this regression chapter, the goal is to forecast HRV values for the next hour. In other words, the goal is to determine wether the selected attributes _HRV_, _HOD_, _IAW_, _DOW_, _IM_ can help predict _t+1_ attribute, the latter being described below.
+
+For this forecast to be possible a new feature was created, where the original HRV where _lagged_ by one hour. Because the measures were not equidistant in time, a _resample_ was made by performing an interpolation of mean values. 
+
+A few different feature transformations could've been used such as seasonal difference or standardization. Seasonal difference would only be pertinent if the data set had more values for different years (however in this case, the first observations occur only in the beginning of 2018). A standardization of the features was then performed and table \ref{partII_reg_head_features} shows an extract of the first five standardized observations:
+
+|    |       HRV |     IAW |        HOD |      DOW |        IM |       t+1 |
+|---:|----------:|--------:|-----------:|---------:|----------:|----------:|
+|  0 | -0.394288 | 1.78775 | -0.216582  | -1.00301 |  1.73174  | -0.204286 |
+|  1 | -0.584178 | 1.78775 | -0.0721366 | -1.00301 |  1.73174  | -0.39388  |
+|  2 | -0.774069 | 1.78775 |  0.0723092 | -1.00301 | -0.577452 | -0.583475 |
+|  3 | -0.963959 | 1.78775 |  0.216755  | -1.00301 | -0.577452 | -0.773069 |
+|  4 | -1.15385  | 1.78775 |  0.361201  | -1.00301 | -0.577452 | -0.962663 |
+
+Table: Extract of the observations \label{partII_reg_head_features}
+
+And a summary of the features is show in table \ref{partII_reg_summary_features}, where it's possible to verify that each feature has a mean of 0 (or very close to 0) and a standard deviation close to 1.
+
+|       |             HRV |             IAW |             HOD |             DOW |              IM |            t+1 |
+|:------|----------------:|----------------:|----------------:|----------------:|----------------:|---------------:|
+| count | 15068           | 15068           | 15068           | 15068           | 15068           | 15068          |
+| mean  |    -1.81078e-16 |    -2.18095e-17 |    -8.01648e-17 |    -3.53668e-18 |     1.23666e-16 |     9.0539e-17 |
+| std   |     1.00003     |     1.00003     |     1.00003     |     1.00003     |     1.00003     |     1.00003    |
+| min   |    -2.75339     |    -0.559363    |    -1.66104     |    -1.50388     |    -0.577452    |    -2.7493     |
+| 25%   |    -0.642028    |    -0.559363    |    -0.938811    |    -1.00301     |    -0.577452    |    -0.64105    |
+| 50%   |    -0.125696    |    -0.559363    |    -0.0721366   |    -0.00126315  |    -0.577452    |    -0.125708   |
+| 75%   |     0.534439    |    -0.559363    |     0.938984    |     1.00048     |     1.73174     |     0.533397   |
+| max   |     8.60488     |     1.78775     |     1.66121     |     1.50136     |     1.73174     |    11.0257     |
+
+Table: Feature summary \label{partII_reg_summary_features}
+
+One-hot-encoding was not used because the features were non-categorical.
+
+### Regularization parameter
+
+Due to the fact that the correlation between _HRV_ and other features was very low (close to 0), where _t+1_ was the only feature that had a high linear correlation value (0.97), two approaches were taken in order to compare the results among those. First a linear regression without regularization was fitted to the features followed by a calculation of the score, the mean squared error (MSE) and the root mean squared error (RMSE). The same approach was then performed with regularization parameters.
+
+The following shows the results from the non-regularized linear regression:
+
+```
+Score:  0.9493692818744394
+Mean Squared Error: 0.04911128970125055
+Root Mean Squared Error: 0.22161067145164862
+```
+
+The regularized linear regression was performed through the _Ridge_ regression algorithm. There were two approaches to determine the results of the cost function. Firstly, the accuracy, MSE and RMSE where calculated using the _RidgeCV_ algorithm and by having an algorithmic range of $λ$ between -10 and 10. Also a K=10 was used as the algorithm's parameter, such as the following:
+
+```
+ridgeCV = linear_model.RidgeCV(alphas=alphas, cv=10)
+ridgeCV.fit(X_train,y_train)
+```
+
+After fitting, the results obtained were:
+
+```
+Score 0.9493699740304672
+Mean Squared Error: 0.04911061831683309
+Root Mean Squared Error: 0.22160915666288045
+```
+
+Figure \ref{actual_vs_pred} visually indicates the good results when predicting values with a Ridge Regression.
+
+![Actual VS Predicted values \label{actual_vs_pred}](../report/images/actual_vs_pred.png){ width=100% height=100% }
+
+From the values obtained (specifically, the RMSE), it seems that on both the non-regularized and regularized regressions, the values obtained are quite similar. The _RidgeCV_ algorithm also allows obtaining the best value of $λ$, which was 1.0235310218990269e-09, and being quite close to 0 indicates that this is just a Linear Regression (Ordinary Least Squares Regression).
+
+<!-- The L2 norm term in ridge regression is weighted by the regularization parameter alpha. So, if the alpha value is 0, it means that it is just an Ordinary Least Squares Regression model. So, the larger is the alpha, the higher is the smoothness constraint. So, the smaller the value of alpha, the higher would be the magnitude of the coefficients.” -->
+
+Nonetheless, it's important to visualize the Ridge coefficients as function of the regularization as shown in Figure \ref{coef_reg}.
+
+![Ridge coefficients as a function of the regularization \label{coef_reg}](../report/images/coefficients_reg.png){ width=100% height=100% }
+
+There's a substantial difference between _t+1_ and the remaining attributes, thus explaining that the weights of _t+1_ are the ones who matter the most when it comes to a bias-variance trade-off. Considering the high score obtained previously, and knowing that a higher value of $λ$ indicates a lower variance and a high bias, the optimal value of $λ$ should not be too large. In fact, a lower value of $λ$ seems to be appropriate, an evidence suggested by the optimal value calculate before, after fitting the data to the _RidgeCV_ algorithm. 
+
+The optimal regularization parameter $λ$ was then calculated by varying its values and its associated test error (using Root Mean Square Error). Figure \ref{reg_var_error} shows that the closer to 0 the regularization parameter is, the lower is the error. This is another indicator that this Ridge Regression is in fact just a Linear Regression. The optimal value of the regularization parameter seems to be the lowest around `12`, considering that
+
+$$
+-log(λ) = -3
+$$
+
+![Regularization parameter variation \label{reg_var_error}](../report/images/error_reg.png){ width=100% height=100% }
+
+
+### Effects of selected attributes when predicting the selected class
+
+The effects of the selected attributes _HRV_, _HOD_, _IAW_, _DOW_, _IM_ when predicting the selected class _t+1_ are determined by the coefficients as part of the L2 regularization (achieved with $λ$). The determined coefficients when fitting the data to the Ridge algorithm, where:
+
+```
+[9.71570839e-01, 6.56130694e-03, 5.75053872e-03, 1.89328307e-03,4.45169066e-04]
+```
+
+The above values demonstrate that _HRV_, when compared to the remaining attributes, has the most effect when determining _t+1_. Specifically, it means that for every unit of _HRV_, there are 0.97 units of t+1 increasing. 
+
+All in all, considering the data set, it makes sense that these values occur because its values are quite similar, i.e., _t+1_ is a feature extracted from HRV. For future purposes, it will be interesting to increase the lagging values so that it's possible to predict HRV values not only for the next hour but also for the next day (and/or week and so forth). 
+
+It's important to mention that the remaining attributes are not as relevant. Thus, being at work or not, morning or not, does not have a relevant on HRV values.
+
+## Regression - part B
+
+### Comparison of three models
+
+For the comparison, and due to the size of the data set, K1 = K2 = 5. The comparison of the three models is shown in Table \ref{model_comparison} (using Mean Absolute Error):
+
+|    |   Outer fold |   Baseline error |   Linear Regression error |   Linear Regression λ |   ANN hidden units |   ANN error |
+|---:|-------------:|-----------------:|--------------------------:|----------------------:|-------------------:|------------:|
+|  0 |            1 |        0.0499267 |                 0.0499653 |                 1e-10 |                  9 |    1.84182  |
+|  1 |            2 |        0.0301518 |                 0.0303581 |                 1e-10 |                  8 |    1.78487  |
+|  2 |            3 |        0.0318932 |                 0.0324046 |                 1e-10 |                  8 |    1.18325  |
+|  3 |            4 |        0.0524825 |                 0.0523391 |                 1e-10 |                  8 |    0.946096 |
+|  4 |            5 |        0.0857946 |                 0.085629  |                 1e-10 |                  8 |    1.54597  |
+
+Table: two-level cross-validation to compare three models \label{model_comparison}
+
+The baseline model - a linear regression without regularization parameters - has the lowest error where's the ANN has the highest. However, the baseline error and the regularized linear regression error are quite similar. The regularization parameters of the Linear Regression were very close to zero, thus closely matching the value obtained in the previous chapter.
+
+### Statistical comparison
+
+For the statistical comparison, a paired _t-test_ was used to compare the models, in terms of their generalization error. The _p-value_ was then calculated for the null hypothesis that the pair of models have the same performance. The confidence intervals were also calculated.
+
+The results were the following are presented in Table \ref{statistical_comparison}
+
+| models                                    |    p-value | confidence intervals                          |
+|:------------------------------------------|-----------:|:----------------------------------------------|
+| Baseline VS Regularized Linear Regression | 0.514396   | (-0.032617854919582835, 0.032438934843939164) |
+| Baseline VS ANN                           | 0.00276655 | (-2.352198615043992, -0.9631828114922801)     |
+| Regularized Linear Regression VS ANN      | 0.00276421 | (-2.352198615043992, -0.9631828114922801)     |
+
+
+Table: Statistic comparison between models \label{statistical_comparison}
+
+The high p-value on the first comparison shows that there is no statistical difference between models. 
+
+## Classification
+
+### Classification problem
+
+The classification problem to be solve is a binary classification. The goal is to predict wether the subject is at work (_IAW_) based on the _HRV_ values. 
+
+### Classification method
+
+The chosen method for the classification problem was an Artificial Neural Network while variating the number of hidden units.
+
+### Cross-validation
+
+|   Outer fold |   Baseline error |   Logistic Regression error |   Logistic Regression λ |   ANN hidden units |   ANN error |
+|-------------:|-----------------:|----------------------------:|------------------------:|-------------------:|------------:|
+|            1 |         0.238806 |                    0.238806 |                      10 |                 10 |  120.256    |
+|            2 |         0.238143 |                    0.238143 |                      10 |                  2 |    0.238143 |
+|            3 |         0.236816 |                    0.236816 |                      10 |                  2 | 2121.4      |
+|            4 |         0.238806 |                    0.238806 |                      10 |                  6 |  494.498    |
+|            5 |         0.238885 |                    0.238885 |                      10 |                  1 | 1066.74     |
+
+Table: Two-level cross-validation with hyper parameter testing
+
+### Statistical evaluation
+
+The results from the statistical evaluation are shown in Table \ref{statistical_comparison_2}
+
+| models              |    p-value | confidence interval                             |
+|:--------------------|-----------:|:------------------------------------------------|
+| Baseline VS Log Reg | nan        | (-0.0012800589867520478, 0.0012800589867520478) |
+| Baseline VS ANN     |   0.111859 | (-841.3060461412431, 130.0951330735939)         |
+| Log Reg VS ANN      |   0.111859 | (-841.3060461412431, 130.0951330735939)         |
+
+
+Due to the fact that the errors from the baseline model and the regularized logistic regression model are the same, then it's not possible to calculate the p-value. The confidence internal is also too wide due to this proximity of values.
+
+Table: Statistic comparison between models \label{statistical_comparison2}
+
+### Recommendations
+
+The baseline and the regularized logistic regression model are the practically the same, meaning that the regularization has no effect of the cost calculation. However, for 2 hidden units, the ANN has an error of 0.238143, albeit somewhat irregular because another fold with the same amount of hidden units presents a much higher error. 
+
+<!-- TODO: More recommendations -->
+
+
+\pagebreak
+
+
+<!-- 
+The first approach only included a fitted linear regression with just one feature, _t+1_. This was then followed by a regularized linear regression, using the _Ridge_ algorithm. The same methodology was used for the second approach, but instead of just using one feature, all of the features were used.  -->
+
+
+
+
+
+
+
 
 - Which variable is going to be predicted?
  HRV
@@ -417,6 +596,7 @@ Converted to polinomial regression after noticing that the RMSE values were lowe
     - Determined RidgeCV (alphas = alphas, cv=10)
     - Show actual versus predicted
 - "So, if the alpha value is 0, it means that it is just an Ordinary Least Squares Regression model. The L2 norm term in ridge regression is weighted by the regularization parameter alpha. So, if the alpha value is 0, it means that it is just an Ordinary Least Squares Regression model. So, the larger is the alpha, the higher is the smoothness constraint. So, the smaller the value of alpha, the higher would be the magnitude of the coefficients."
+- Explain bias-variance trade-off
 
 ### 3.
 
@@ -463,6 +643,7 @@ Converted to polinomial regression after noticing that the RMSE values were lowe
 - pag 236 do handson
 - Nao ha anomalies ou outliers
 
-- 
+
+\pagebreak
 
 # References
