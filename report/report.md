@@ -551,16 +551,143 @@ The results from the statistical evaluation are shown in Table \ref{statistical_
 
 Due to the fact that the errors from the baseline model and the regularized logistic regression model are the same, then it's not possible to calculate the p-value. The confidence internal is also too wide due to this proximity of values.
 
-Table: Statistic comparison between models \label{statistical_comparison2}
+Table: Statistic comparison between models \label{statistical_comparison_2}
 
 ### Recommendations
 
 The baseline and the regularized logistic regression model are the practically the same, meaning that the regularization has no effect of the cost calculation. However, for 2 hidden units, the ANN has an error of 0.238143, albeit somewhat irregular because another fold with the same amount of hidden units presents a much higher error. 
 
 <!-- TODO: More recommendations -->
+<!-- TODO: The data is not an normal curve -->
 
 
 \pagebreak
+
+# Part III - Unsupervised learning
+
+## Clustering
+
+For the clustering part of this report, a subset of the previously used data set was used. For this subset, two features were included: HRV and DOW. Table \ref{cluster_summary} shows a summary of this subset:
+
+|       |   HRV (SDNN) |   Day of Week |
+|:------|-------------:|--------------:|
+| count |    932       |     932       |
+| mean  |     41.2493  |       3.62983 |
+| std   |     15.6852  |       1.83629 |
+| min   |      8.21203 |       1       |
+| 25%   |     30.8391  |       2       |
+| 50%   |     38.8085  |       4       |
+| 75%   |     49.5485  |       5       |
+| max   |    173.526   |       7       |
+
+Table: Summary of the subset \label{cluster_summary}
+
+Also, a visualization for the subset is shown in Figure \ref{cluster_subset}
+
+![Subset of HRV and DOW \label{cluster_subset}](../report/images/unsupervised_clustering_1.png){ width=100% height=100% }
+
+
+
+### Hierarchical clustering
+
+Within the two types of hierarchical clustering, for this report the one used was the agglomerative hierarchical clustering. The affinity used was "Euclidean" and the linkage was "Ward". In order to determine the ideal number of clusters, a dendogram was built.
+
+![Dendogram of clusters \label{cluster_dendogram}](../report/images/unsupervised_clustering_dend.png){ width=100% height=100% }
+
+From the Image \ref{cluster_dendogram} it's possible to verify that the ideal number of clusters is 3. Then it was possible to visualize the clusters, as shown in Image \ref{cluster_visualization}:
+
+![Clusters \label{cluster_visualization}](../report/images/unsupervised_clustering_agglomerative.png){ width=100% height=100% }
+
+As a reminder, the first (1) day of the week is Monday and the last (7) is Sunday. The clusters seems to be grouped according to its variability: with high variability, a new cluster is formed. The remainder of the clusters seem to be created around the average value of HRV (41.2493, as shown in Table \ref{cluster_summary} ), i.e., the purple cluster groups values below average and the green cluster groups values above average (excluding higher values). 
+
+<!-- - Agglomerative hierarquical clustering 
+- affinity -> euclidean. explain why.
+- linkage -> ward. explain why.
+- Created dendogram to find ideal number of clusters. Explain how nr of clusters was found and show dendogram picture. -->
+
+### Gaussian Mixture Model (GMM)
+
+In order to estimate the number of components, a cross-validation was performed and the AIC (_Akaike Information Criterion_) and BIC (_Bayesian Information Criterion_) where determined, in order to execute the so-called elbow test. Figure \ref{gmm_elbow} shows the result:
+
+![AIC and BIC for different clusters K \label{gmm_elbow}](../report/images/gmm_elbow.png){ width=100% height=100% }
+
+Figure \ref{gmm_elbow} allows to conclude the ideal number of clusters is 2, where after that BIC starts increasing again. 
+
+Now plotting the clusterized data, it's possible to see in Figure \ref{gmm_plot} that the clusters are split slightly over the mean value of HRV.
+
+![GMM with two clusters \label{gmm_plot}](../report/images/gmm_clusters.png){ width=100% height=100% }
+
+### Quality of clustering
+
+Both models can have underlying explanations that fit the generated clusters. The Hierarchical clustering model contains high values, thus showing a clear distinction between low, medium and high HRV values. The GMM and its 2 clusters are clearly separating HRV values between its mean, which in practical terms also makes sense, i.e., when the values cross the 50-value of HRV it may mean that on those days (Friday, Saturday and Sunday) the general level of health is higher, whereas Monday corresponds to a lower level of health. 
+
+
+## Anomaly/outlier detection
+
+The premise that any instance that has a low affinity to all the clusters is likely to be an anomaly (@aurelien) is the foundation to determine outliers in this project. 
+
+### Gaussian Kernel density
+
+See Figure \ref{gknn_density}.
+
+![Gaussian Kernel density \label{gknn_density}](../report/images/knn_gkd.png){ width=100% height=100% }
+
+### KNN density 
+
+See Figure \ref{knn_density}.
+
+![KNN density \label{knn_density}](../report/images/knn_density.png){ width=100% height=100% }
+
+### KNN average relative density
+
+See Figure \ref{knn_ard}.
+
+![KNN average relative density \label{knn_ard}](../report/images/knn_ard.png){ width=100% height=100% }
+
+### Outlier detection
+
+According to the above figures, there are no outliers.
+
+## Association mining
+
+Due to the specific nature of this data set, a few considerations have to be taken into count:
+
+- The main question to be answered - for this subchapter - is to determine when observations are made and if there are any associations with it. For example, is it possible to determine if an observation (a measurement of HRV) that has been made on a Saturday, will it also be made at 5pm? Or is there any association between HRV values?
+- The features _HOD_, _DOW_ and _HRV_ had to be binarized.
+
+### Apriori algorithm
+
+The Apriori algorithm was run with the following parameters:
+
+- $min_support = 0.005$
+- $min_confidence = 0.020$
+- $min_lift = 2$
+
+The confidence value is quite low in order to cover the fact that this is a very specific data set to be used for association mining. After the data sanitization as describe before, the results when running the Apriori algorithm are represented in Table \ref{association_mining_results}
+
+| associations                                     |   confidence |
+|:-------------------------------------------------|-------------:|
+| frozenset({'Day of Week__6', 'Hour of Day__11'}) |   0.00965665 |
+| frozenset({'Day of Week__6', 'Hour of Day__23'}) |   0.00751073 |
+| frozenset({'Hour of Day__17', 'Day of Week__7'}) |   0.0182403  |
+
+Table: Association mining between measurements (observations) \label{association_mining_results}
+
+Despite having a very low confidence level, it's possible to see that measurements made on a Saturday, where likely to be made at 11 am as well. For the same day of the week, it's also likely to have a measurement at 11pm. Moreover, a measurement of HRV at 5pm will likely be made on a Sunday.
+
+The above values make sense in realistic terms due to the fact that the measurement devices (specially the Apple Watch) are more likely to be made during the weekend because the author uses it more often at those times.
+
+
+\pagebreak
+
+
+- (Inspiration from https://machinelearningmastery.com/probability-density-estimation/)
+- pag 236 do handson
+- Nao ha anomalies ou outliers
+
+
+
+
 
 
 <!-- 
@@ -612,37 +739,6 @@ Converted to polinomial regression after noticing that the RMSE values were lowe
 - Other features are not highly correlated
 - A better to have continuous values and analyze would be to use the time series for forecast. To do that, the timestamp should be transformed in order to have a lag.
 - Non-regularized has better scores than regularized
-
-\pagebreak
-
-## Classification
-
-### Baseline model (log regression)
-
-- Resampled data with interpolation
-- 
-
-
-
-\pagebreak
-
-# Unsupervised learning
-
-## Hierarquical clustering
-
-- Agglomerative hierarquical clustering 
-- affinity -> euclidean. explain why.
-- linkage -> ward. explain why.
-- Created dendogram to find ideal number of clusters. Explain how nr of clusters was found and show dendogram picture.
-
-## Gaussian Mixture Model
-
-## Anomaly/outlier detection
-
-- (Inspiration from https://machinelearningmastery.com/probability-density-estimation/)
-- pag 236 do handson
-- Nao ha anomalies ou outliers
-
 
 \pagebreak
 
