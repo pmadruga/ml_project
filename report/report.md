@@ -557,29 +557,31 @@ The results from the statistical evaluation are shown in Table \ref{statistical_
 
 Table: Statistic comparison between models \label{statistical_comparison_2}
 
-Due to the fact that the errors from the baseline model and the regularized logistic regression model are the same, then it's not possible to calculate the p-value. The confidence interval is also too wide due to this proximity of values.
+Since the errors from the baseline model and the regularized logistic regression model are the same, then it's not possible to calculate the p-value. The confidence interval is also too wide due to this proximity of values.
 
 ### Recommendations
 
-The baseline and the regularized logistic regression model are practically the same, meaning that the regularization has no effect on the cost calculation. However, for 2 hidden units, the ANN has an error of 0.238143, albeit somewhat irregular because another fold with the same amount of hidden units presents a much higher error. 
+The baseline and the regularized logistic regression model are practically the same, meaning that the regularization does not affect the cost calculation. However, for 2 hidden units, the ANN has an error of 0.238143, albeit somewhat irregular because another fold with the same amount of hidden units presents a much higher error. 
 
 ## Discussion 
 
 ### Lessons learned from regression and classification
 
-A time series data set has its own peculiarities. For regression purposes, it's possible to conclude that the best use-case for these types of data sets are forecasting. In order to forecast properly, a few regularization methods were needed so that standardization and one-hot encoding of parameters where possible. By having so many different types of features, it's possible to understand the purpose of standardization. 
+A time-series data set has its peculiarities. For regression purposes, it's possible to conclude that the best use-case for these types of data sets are forecasting. To forecast properly, a few regularization methods were needed so that standardization and one-hot encoding of parameters where possible. By having so many different types of features, it's possible to understand the purpose of standardization. 
 
-There's a few differences when assessing the performance of a regression model and classification one. In this project, the regression model (assessed via _mean squared error_ and _root mean square error_) allowed forecasting HRV values for the next hour with a very high level of accuracy. It was verified that the model turned out to be a Lest Squares Ordinary model due to the fact that the remainder of features seem to not be relevant for the final score. An analysis of the influence of weights (via a Ridge regression) of the features allows to conclude that only one feature had significant impact when determining the regularization parameter. Despite being a bivariate data set, hyperparameter tuning takes a fundamental role in model optimization, i.e., achieving a good bias-variance trade-off. It was possible to understand that a proper interval of the $λ$ is quite important and a possible improvement in the hyperparameter tuning is to test different intervals and scales.
+There are a few differences when assessing the performance of a regression model and classification one. In this project, the regression model (assessed via _mean squared error_ and _root mean square error_) allowed forecasting HRV values for the next hour with a very high level of accuracy. It was verified that the model turned out to be a Lest Squares Ordinary model because the remainder of features seem to not be relevant for the final score. An analysis of the influence of weights (via a Ridge regression) of the features allows concluding that only one feature had a significant impact when determining the regularization parameter. Despite being a bivariate data set, hyperparameter tuning takes a fundamental role in model optimization, i.e., achieving a good bias-variance trade-off. It was possible to understand that a proper interval of the $λ$ is quite important and a possible improvement in the hyperparameter tuning is to test different intervals and scales.
 
-Another relevant measure of achieving a good trade-off, specifically for preventing overfitting, is cross validation. A two-layer cross-validation results in a good way to overview ideal hyperparameters.
+Another relevant measure of achieving a good trade-off, specifically for preventing overfitting, is cross-validation. A two-layer cross-validation results in a good way to overview ideal hyperparameters.
 
-In terms of classification, other ways of performance assessment should've been performed, such as a confusion matrix, precision/recall or area under the ROC curve in order to analyze thoroughly and interpret True Positives and False Negatives. Moreover, fitting the data through other algorithms would be interesting. Nonetheless, having chosen an Artificial Neural Network allowed better understanding input, hidden and output layers. 
+In terms of classification, other ways of performance assessment should've been performed, such as a confusion matrix, precision/recall or area under the ROC curve to analyze thoroughly and interpret True Positives and False Negatives. Moreover, fitting the data through other algorithms would be interesting. Nonetheless, having chosen an Artificial Neural Network allowed better understanding input, hidden and output layers. 
 
 ### Comparison with current literature
 
+This data set is very personal, hence the existing literature is not contained to just one use case but instead, it contains aggregated data for several users. Thus, the results cannot be compared between this report and the existing literature. Moreover, literature refers to HRV as a mean of diagnosis of a specific, rather than classifying or predicting values. As a reminder, the feature to be predicted in the classification section is whether the author of this report was at work (_IAW_, binary), thus making the case study even more specific and without parallel published scientific articles.
 
+Nonetheless, it's relevant to mention @chiew due to applying Machine Learning models for risk prediction of sepsis ($N=214$ patients). The models used where k-nearest neighbors, random forest, adaptive boosting, gradient boosting and support vector machine, which is different than the models used in the classification part of this project. The models were assessed using the area under the precision-recall curve, also different than the ones used previously.
 
-
+Thus, it would be interesting to use the algorithms and performance assessment to classify HRV and its related features.
 
 \pagebreak
 
@@ -619,11 +621,6 @@ From the Image \ref{cluster_dendogram} it's possible to verify that the ideal nu
 ![Clusters \label{cluster_visualization}](../report/images/unsupervised_clustering_agglomerative.png){ width=100% height=100% }
 
 As a reminder, the first (1) day of the week is Monday and the last (7) is Sunday. The clusters seems to be grouped according to its variability: with high variability, a new cluster is formed. The remainder of the clusters seem to be created around the average value of HRV (41.2493, as shown in Table \ref{cluster_summary} ), i.e., the purple cluster groups values below average and the green cluster groups values above average (excluding higher values). 
-
-<!-- - Agglomerative hierarquical clustering 
-- affinity -> euclidean. explain why.
-- linkage -> ward. explain why.
-- Created dendogram to find ideal number of clusters. Explain how nr of clusters was found and show dendogram picture. -->
 
 ### Gaussian Mixture Model (GMM)
 
