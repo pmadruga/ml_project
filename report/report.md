@@ -25,7 +25,7 @@ It has its origin on neurons from the parasympathetic, sympathetic nervous syste
 
 While stress (and its causes and effects) is a known research topic, it's also more accessible due to the widespread usage of wearables that allow the collection of HRV data. The combination of the possibility of stress analysis from HRV and easy access to data, makes this the main focus of the present report, determining whether machine learning techniques can help minimalizing generalization errors.
 
-This report is structured into three main parts: data analysis, supervised learning and unsupervised. All three parts revolve around predicting and/or clustering HRV values.
+This report is structured into three main parts: data analysis, supervised and unsupervised learning. All three parts revolve around predicting and/or clustering HRV values.
 
 \pagebreak
 
@@ -493,13 +493,13 @@ It's important to mention that the remaining attributes are not as relevant. Thu
 
 For the comparison, and due to the size of the data set, K1 = K2 = 5. The comparison of the three models is shown in Table \ref{model_comparison} (using Mean Absolute Error):
 
-|    |   Outer fold |   Baseline error |   Linear Regression error |   Linear Regression $λ$ |   ANN hidden units |   ANN error |
-|---:|-------------:|-----------------:|--------------------------:|----------------------:|-------------------:|------------:|
-|  0 |            1 |        0.0499267 |                 0.0499653 |                 1e-10 |                  9 |    1.84182  |
-|  1 |            2 |        0.0301518 |                 0.0303581 |                 1e-10 |                  8 |    1.78487  |
-|  2 |            3 |        0.0318932 |                 0.0324046 |                 1e-10 |                  8 |    1.18325  |
-|  3 |            4 |        0.0524825 |                 0.0523391 |                 1e-10 |                  8 |    0.946096 |
-|  4 |            5 |        0.0857946 |                 0.085629  |                 1e-10 |                  8 |    1.54597  |
+|   Outer fold |   Baseline error |   Linear Regression error | Linear Regression $λ$ |   ANN hidden units |   ANN error |
+|-------------:|-----------------:|--------------------------:|----------------------:|-------------------:|------------:|
+|            1 |        0.0499267 |                 0.0499653 |                 1e-10 |                  9 |    1.84182  |
+|            2 |        0.0301518 |                 0.0303581 |                 1e-10 |                  8 |    1.78487  |
+|            3 |        0.0318932 |                 0.0324046 |                 1e-10 |                  8 |    1.18325  |
+|            4 |        0.0524825 |                 0.0523391 |                 1e-10 |                  8 |    0.946096 |
+|            5 |        0.0857946 |                 0.085629  |                 1e-10 |                  8 |    1.54597  |
 
 Table: two-level cross-validation to compare three models \label{model_comparison}
 
@@ -519,13 +519,13 @@ The results were the following are presented in Table \ref{statistical_compariso
 
 Table: Statistic comparison between models \label{statistical_comparison}
 
-The high p-value on the first comparison shows that there is no statistical difference between models. 
+The high p-value on the first comparison shows that there is no statistical difference between models, because it indicates weak evidence against the null hypothesis, so it fails to reject the null hypothesis. However, the smaller p-value for the second and third comparisons on Table \ref{statistical_comparison} show that there's a strong evidence against the null hypothesis, thus rejecting it.  
 
 ## Classification
 
 ### Classification problem
 
-The classification problem to be solve is a binary classification. The goal is to predict wether the subject is at work (_IAW_) based on the _HRV_ values. The data set does not have any resampling, meaning that the Number of observations (_N_) is 923. 
+The classification problem to be solve is a binary classification. The goal is to predict wether the subject is at work (_IAW_) based on the _HRV_ values. 
 
 ### Classification method
 
@@ -557,11 +557,22 @@ The results from the statistical evaluation are shown in Table \ref{statistical_
 
 Table: Statistic comparison between models \label{statistical_comparison_2}
 
-Since the errors from the baseline model and the regularized logistic regression model are the same, then it's not possible to calculate the p-value. The confidence interval is also too wide due to this proximity of values.
+Since the errors from the baseline model and the regularized logistic regression model are the same, then it's not possible to calculate the p-value. The confidence interval is also too wide due to this proximity of values. Also, the baseline and the regularized logistic regression models have the same p-value when comparing to the neural network.
 
-### Recommendations
+In this case, considering the p-value is 0.111859 (and $\leq$ 0.05), the null hypothesis fails to be rejected thus meaning the lack of statistical difference between models. 
+
+### Recommendations based on statistical evaluation
 
 The baseline and the regularized logistic regression model are practically the same, meaning that the regularization does not affect the cost calculation. However, for 2 hidden units, the ANN has an error of 0.238143, albeit somewhat irregular because another fold with the same amount of hidden units presents a much higher error. 
+
+Testing other different classification algorithms and comparing them in the same way as performed above is a recommendation, due to these results.
+
+### Prediction using a logistic regression model and regularization parameter $λ$
+
+A logistic regression model determines its output using the logistic sigmoid function, in order to return the probability of a certain binary value to occur. When compared to linear regression, where the values are continuous, the logistic regression predictions are discrete and, in this case, study, are binary.
+
+The features between the regression and the classification are different already so it's not possible to compare them. Nonetheless, exploring other features - and especially the ones that don't revolve around HRV - might provide interesting results.
+
 
 ## Discussion 
 
@@ -693,15 +704,6 @@ Table: Association mining between measurements (observations) \label{association
 Despite having a very low confidence level, it's possible to see that measurements made on a Saturday, where likely to be made at 11 am as well. For the same day of the week, it's also likely to have a measurement at 11 pm. Moreover, a measurement of HRV at 5 pm will likely be made on a Sunday.
 
 The above values make sense in real terms due to the fact that the measurement devices (especially the Apple Watch) are more likely to be made during the weekend because the author uses it more often at those times.
-
-
-\pagebreak
-
-
-<!-- 
-The first approach only included a fitted linear regression with just one feature, _t+1_. This was then followed by a regularized linear regression, using the _Ridge_ algorithm. The same methodology was used for the second approach, but instead of just using one feature, all of the features were used.  -->
-
-
 
 \pagebreak
 
