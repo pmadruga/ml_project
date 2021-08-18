@@ -2,7 +2,7 @@
 title: "Machine Learning Techniques applied to Heart Rate Variability"
 subtitle: "Final report for the Machine Learning course of the Technical University of Denmark"
 author: [Pedro Filipe Emauz Madruga]
-date: "2019-12-31"
+date: "Delivered: 2019-12-31"
 subject: "Machine Learning"
 lang: "en"
 toc: true
