@@ -1,6 +1,6 @@
 # Machine Learning Techniques applied to Heart Rate Variability
 
-This is a 3-month long report where Supervised and Unsupervised Learning techniques were applied to a dataset that has a set of features, including Heart Rate Variability.
+This is a 3-month long report where Supervised and Unsupervised Learning techniques were applied to a dataset that has a set of features, including Heart Rate Variability. Data stems from two years of health data from an Apple Watch ⌚️
 
 It contains a report for the Machine Learning course of the Technical University of Denmark (DTU).
 
